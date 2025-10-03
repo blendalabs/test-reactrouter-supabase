@@ -1,0 +1,41 @@
+---
+description: React Router v7 + Supabase Framework Rules
+globs:
+alwaysApply: true
+---
+
+- No need to run `npm run dev` because an app server is always running.
+
+- Use filename-based routing using `flatRoutes`.
+
+- Structure a route file like: 1) `loader`, 2) component, 3) `action`.
+
+- Place data handling in `loader`/`action` (server-side). No need to create separate `/api` routes.
+
+- Use `Form` (not `form`) and `useFetcher`. If URL changes after action then use `Form`, if not use `useFetcher`.
+
+- Benefit from RR7 nested routing, e.g. have navigation/header/footer in higher-level routes and use `<Outlet />`.
+
+- Use `ErrorBoundary` on a top/root-level to display server errors to the user in a friendly way.
+
+- Avoid `useState`. UI state should rather be in URL and use `useParams`/`useSearchParams`. Data state should be in database.
+
+- Use `useNavigation` to show if UI is ready or not.
+
+- Use `Suspense`/`Await` components on complex pages for progressive loading.
+
+- Create a `ButtonLink` component that has the same props as a normal button, plus a `to` prop.
+
+- Avoid inventing new file-specific types if you can. Gather types in @app/types folder, e.g. @app/types/global.d.ts and @app/types/supabase.d.ts
+
+- Install shadcn/ui components with `npx shadcn@latest add [NAME]`
+
+- Design system: see @app/root.css and @tailwind.config.ts. We support light/dark themes, so avoid hardcoding colors, instead use functional classes e.g. background, foreground, primary, secondary, muted, accent, destructive, success, card, popover, border, input, ring, sidebar.
+
+- Avoid lots of classNames on e.g. Button/Input - instead create a few variants and control with `variant` prop.
+
+- We don’t need mock data for failed API calls – fine to just return e.g. empty array or show error message.
+
+- Do not run `npx supabase db` commands (reset, push) without my permission
+
+- For Supabase requests, use `const { supabaseClient } = createSupabaseServerClient(request);` - import from @app/services/supabase.server.ts
