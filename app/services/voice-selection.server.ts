@@ -18,26 +18,14 @@ export async function selectVoiceForLocale(
   targetLocale: string
 ): Promise<VoiceSelectionResult> {
   try {
-    console.log(
-      `🎤 [VOICE_SELECTION] Selecting voice for locale: ${targetLocale}, template: ${templateId}`
-    );
-
     // Use app default voice for locale (template integration removed)
     const appDefaultVoice = getDefaultVoiceForLocale(targetLocale) || 'Rachel';
-    console.log(
-      `[VOICE_SELECTION] Using app default voice: ${appDefaultVoice} for ${targetLocale}`
-    );
 
     return {
       voiceName: appDefaultVoice,
       source: 'app_default',
     };
-  } catch (error) {
-    console.error(
-      `[VOICE_SELECTION] Error selecting voice for ${targetLocale}:`,
-      error
-    );
-
+  } catch {
     // Fallback to app default
     const fallbackVoice = getDefaultVoiceForLocale(targetLocale) || 'Rachel';
     return {

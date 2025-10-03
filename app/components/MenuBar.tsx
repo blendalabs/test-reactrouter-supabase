@@ -1,7 +1,5 @@
 import { Button } from '~/components/ui/button';
-import { ArrowLeft, Globe } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { createSupabaseBrowserClient } from '~/services/supabase.client';
+import { ArrowLeft } from 'lucide-react';
 import ThumbnailPicker from './ThumbnailPicker';
 
 interface MenuBarProps {

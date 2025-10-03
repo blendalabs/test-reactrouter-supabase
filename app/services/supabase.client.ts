@@ -13,11 +13,11 @@ export const createSupabaseBrowserClient = () => {
   const client = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
   // Listen for auth errors and clear invalid tokens
-  client.auth.onAuthStateChange((event, session) => {
+  client.auth.onAuthStateChange(event => {
     if (event === 'TOKEN_REFRESHED') {
-      console.log('Auth token refreshed');
+      // Auth token refreshed
     } else if (event === 'SIGNED_OUT') {
-      console.log('User signed out');
+      // User signed out
     }
   });
 
@@ -34,7 +34,7 @@ export const supabase = new Proxy(
       if (!_supabaseClient) {
         _supabaseClient = createSupabaseBrowserClient();
       }
-      return (_supabaseClient as any)[prop];
+      return (_supabaseClient as Record<string, unknown>)[prop as string];
     },
   }
 );

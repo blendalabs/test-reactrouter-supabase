@@ -39,6 +39,9 @@ export default [
         Response: 'readonly',
         Headers: 'readonly',
         HTMLDivElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        URL: 'readonly',
+        File: 'readonly',
         React: 'readonly',
         // Node.js globals
         process: 'readonly',

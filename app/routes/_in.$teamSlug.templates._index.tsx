@@ -7,10 +7,9 @@ import {
   getSupportedLocaleName,
 } from '../services/locales';
 import { appService } from '~/services/app';
-import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
-import { Plus, Play, Globe, Clock, Tag } from 'lucide-react';
+import { Play, Globe, Clock } from 'lucide-react';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
@@ -28,8 +27,7 @@ export async function loader({
   // Ensure user has a profile
   try {
     await ensureUserProfile(user, request);
-  } catch (error) {
-    console.error('Profile creation error:', error);
+  } catch {
     // Continue anyway, the profile creation might have failed but we can still show templates
   }
 
@@ -80,7 +78,6 @@ export async function loader({
   });
 
   if (error) {
-    console.error('Error fetching templates:', error);
     throw new Error('Failed to load templates');
   }
 
@@ -93,7 +90,12 @@ function getTemplateStatus(
 ): 'completed' | 'in-progress' | 'draft' {
   const locales = template.template_locales || [];
   if (locales.length === 0) return 'draft';
-  if (locales.some((locale: any) => locale.last_render_url)) return 'completed';
+  if (
+    locales.some(
+      (locale: { last_render_url?: string }) => locale.last_render_url
+    )
+  )
+    return 'completed';
   return 'in-progress';
 }
 
@@ -120,7 +122,7 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 export default function TemplatesPage() {
   const navigate = useNavigate();
   const { user, team, templates } = useLoaderData<typeof loader>();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
 
   const filteredTemplates = templates.filter(template =>
     template.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -211,7 +213,10 @@ export default function TemplatesPage() {
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {template.template_locales?.map(
-                    (locale: any, localeIndex: number) => (
+                    (
+                      locale: { id: string; locale: string },
+                      localeIndex: number
+                    ) => (
                       <Badge
                         key={locale.id}
                         variant="secondary"
@@ -238,12 +243,8 @@ export default function TemplatesPage() {
         <div className="text-center py-12 animate-in fade-in-50 slide-in-from-bottom-4">
           <div className="text-muted-foreground">
             <Globe className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
-            <p className="text-lg mb-2">
-              No templates found
-            </p>
-            <p>
-              Try adjusting your search or create a new template
-            </p>
+            <p className="text-lg mb-2">No templates found</p>
+            <p>Try adjusting your search or create a new template</p>
           </div>
         </div>
       )}

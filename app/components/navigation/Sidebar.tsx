@@ -1,15 +1,6 @@
 import { Link, useParams } from 'react-router';
 import { Button } from '~/components/ui/button';
-import { Separator } from '~/components/ui/separator';
-import {
-  BarChart3,
-  BookTemplate as Template,
-  Wand2,
-  FolderOpen,
-  Video,
-  Tag,
-  Archive,
-} from 'lucide-react';
+import { Video } from 'lucide-react';
 import packageJson from '../../../package.json';
 import { useAuth } from '~/lib/auth';
 

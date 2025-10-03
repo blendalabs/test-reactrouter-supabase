@@ -1,4 +1,4 @@
-import { useOutletContext, type MetaFunction } from 'react-router';
+import { type MetaFunction } from 'react-router';
 
 export const meta: MetaFunction = () => {
   return [
@@ -9,12 +9,6 @@ export const meta: MetaFunction = () => {
 };
 
 export default function EditPage() {
-  const { template, currentLocale, availableLocales } = useOutletContext<{
-    template: any;
-    currentLocale: string;
-    availableLocales: string[];
-  }>();
-
   return null;
 
   // return (

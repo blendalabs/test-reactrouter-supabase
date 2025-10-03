@@ -49,7 +49,7 @@ export async function getAuthUser(request: Request) {
         // This is expected when tokens expire or are invalid
         return null;
       }
-      console.warn('Auth error:', error.message);
+      // Auth error occurred
       return null;
     }
 
@@ -58,14 +58,16 @@ export async function getAuthUser(request: Request) {
     }
 
     return user;
-  } catch (error) {
+  } catch {
     // Catch any unexpected errors
-    console.error('Unexpected auth error:', error);
     return null;
   }
 }
 
-export async function ensureUserProfile(user: any, request: Request) {
+export async function ensureUserProfile(
+  user: { id: string; email?: string; user_metadata?: Record<string, unknown> },
+  request: Request
+) {
   const { supabaseClient } = createSupabaseServerClient(request);
 
   // Check if user has a profile
@@ -87,8 +89,7 @@ export async function ensureUserProfile(user: any, request: Request) {
       });
 
     if (profileError) {
-      console.error('Profile creation error:', profileError);
-      // Don't throw error, just log it and continue
+      // Don't throw error, just continue
       // The profile creation might fail due to RLS, but we can still proceed
     }
   }

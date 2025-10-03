@@ -27,13 +27,13 @@ export const appStrings: AppStrings = {
 
 export function getString(key: string): string {
   const keys = key.split('.');
-  let value: any = appStrings;
+  let value: unknown = appStrings;
 
   for (const k of keys) {
     if (value && typeof value === 'object' && k in value) {
-      value = value[k];
+      value = (value as Record<string, unknown>)[k];
     } else {
-      console.warn(`[APP_STRINGS] Key not found: ${key}`);
+      // Key not found
       return key; // Return the key as fallback
     }
   }

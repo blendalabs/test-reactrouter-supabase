@@ -1,5 +1,3 @@
-import { Button } from '~/components/ui/button';
-import { ArrowLeft, Globe } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { createSupabaseBrowserClient } from '~/services/supabase.client';
 
@@ -27,7 +25,7 @@ export default function ThumbnailPicker({
   };
   const uploadToBucket = async (file: File, templateId: string) => {
     const supabase = createSupabaseBrowserClient();
-    const { data: imageData, error: imageError } = await supabase.storage
+    const { error: imageError } = await supabase.storage
       .from('thumbnails')
       .upload(`${templateId}/${file.name}`, file, {
         // Replace existing file if a file with the same name is uplaoded to the bucket

@@ -6,7 +6,11 @@ import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
 import { showErrorToast, extractErrorMessage } from '~/lib/error-handling';
 
 export default function ErrorBoundary() {
-  const error = useRouteError() as any;
+  const error = useRouteError() as {
+    status?: number;
+    message?: string;
+    statusText?: string;
+  };
 
   // Show error toast when component mounts
   useEffect(() => {

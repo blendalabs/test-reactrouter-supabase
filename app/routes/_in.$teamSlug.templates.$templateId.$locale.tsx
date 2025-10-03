@@ -26,15 +26,13 @@ export async function loader({
   params,
 }: {
   request: Request;
-  params: any;
+  params: { templateId: string; locale: string; teamSlug: string };
 }) {
   const user = await requireAuth(request);
   const { supabaseClient } = createSupabaseServerClient(request);
 
   const templateId = params.templateId;
   const locale = params.locale;
-
-  console.log('🔄 Loader running for template:', templateId, 'locale:', locale);
 
   // Fetch template and its locales
   const { data: template, error: templateError } = await supabaseClient

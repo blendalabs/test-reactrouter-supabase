@@ -62,9 +62,9 @@ P.S. It’s ok to merge `main` branch into your own feature branch to solve conf
 
 - Make a Supabase/Postgres SQL view with all columns you need, e.g. `view_categories`
 - Create a file for your page/route (e.g. `app/routes/my-page.tsx`) with this structure:
-	1. Load data: `loader` (React Router v7 Framework)
-	2. Render: `export default function MyPageName` (React component).
-	3. Form interactions: `action` (React Router v7 Framework)
+  1.  Load data: `loader` (React Router v7 Framework)
+  2.  Render: `export default function MyPageName` (React component).
+  3.  Form interactions: `action` (React Router v7 Framework)
 
 ## Test tasks
 
@@ -75,6 +75,7 @@ We want to be able to filter Video Templates based on Brand, e.g. `?brand=vio-lj
 ![](docs/brand_select.png)
 
 Notes:
+
 - This requires database migrations, backend code, and frontend code.
 - We don’t need an UI to create new brands, but example data in database seed.
 - React Router v7 Framework contains helpers for URL parameters.

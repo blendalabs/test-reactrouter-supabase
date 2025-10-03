@@ -15,7 +15,7 @@ export default function Callback() {
       const { data, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error('Auth callback error:', error);
+        // Auth callback error
         navigate('/login');
         return;
       }

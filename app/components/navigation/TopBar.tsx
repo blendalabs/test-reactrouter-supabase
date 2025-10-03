@@ -1,22 +1,12 @@
-import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/ui/select';
-import { Search, Bell, Settings, User, LogOut } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Bell, Settings, LogOut } from 'lucide-react';
+import { useEffect } from 'react';
 import { createSupabaseBrowserClient } from '~/services/supabase.client';
 
 export function TopBar() {
   const navigate = useNavigate();
   const params = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
 
   // Fetch user's teams
   useEffect(() => {
@@ -31,7 +21,7 @@ export function TopBar() {
         if (!user) return;
 
         // Fetch teams where user is a member
-        const { data: teamMembers, error } = await supabase
+        await supabase
           .from('team_members')
           .select(
             `
@@ -49,15 +39,8 @@ export function TopBar() {
           `
           )
           .eq('user_id', user.id);
-
-        if (error) {
-          console.error('Error fetching teams:', error);
-          return;
-        }
-      } catch (error) {
-        console.error('Error fetching teams:', error);
-      } finally {
-        setLoading(false);
+      } catch {
+        // Error fetching teams
       }
     }
 

@@ -46,9 +46,6 @@ export async function action({ request }: { request: Request }) {
         .eq('user_id', authData.user.id)
         .limit(1);
 
-      console.log('teamMembers', teamMembers);
-      console.log('teamError', teamError);
-
       if (teamError || !teamMembers || teamMembers.length === 0) {
         // If user has no teams, show error message
         return {
