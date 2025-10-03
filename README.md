@@ -1,4 +1,4 @@
-# Test app for React Router v7 Framework and Supabase
+# Test project for new developers
 
 ## Tech stack
 
