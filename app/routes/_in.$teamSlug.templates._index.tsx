@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLoaderData, type MetaFunction } from 'react-router';
 import { requireAuthWithClient, ensureUserProfile } from '../lib/auth.server';
-import type { TemplateWithLocales } from '../types/domain';
+import type { TemplateWithLocales } from '../types/global';
 import {
   getSupportedLocaleFlag,
   getSupportedLocaleName,
