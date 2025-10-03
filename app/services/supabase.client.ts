@@ -2,15 +2,15 @@ import { createBrowserClient } from '@supabase/ssr';
 
 export const createSupabaseBrowserClient = () => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !supabasePublishableKey) {
     throw new Error(
-      'Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+      'Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.'
     );
   }
 
-  const client = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  const client = createBrowserClient(supabaseUrl, supabasePublishableKey);
 
   // Listen for auth errors and clear invalid tokens
   client.auth.onAuthStateChange(event => {
