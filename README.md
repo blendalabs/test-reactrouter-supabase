@@ -1,87 +1,76 @@
-# Welcome to React Router!
+# Test app for React Router v7 Framework and Supabase
 
-A modern, production-ready template for building full-stack React applications using React Router.
+## Tech stack
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+- [React](https://reactjs.org/),
+- [React Router v7 Framework](https://reactrouter.com/start/modes),
+- [Supabase](https://supabase.com/),
+- [shadcn/ui](https://ui.shadcn.com/) (= [Tailwind](https://tailwindcss.com/) + [Radix UI]- (https://www.radix-ui.com/)),
+- [TypeScript](https://www.typescriptlang.org/),
+- [Vite](https://vite.dev/)
 
-## Features
+## Setting up
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+1. Fork this repo (see the gray `Fork` button on GitHub)
+2. Clone your new repo to your computer (see the green `<> Code` button on GitHub)
+3. [Start Docker](https://www.docker.com/) (used for Supabase)
+4. Start Supabase: `npx supabase start` (tip: you can run the [Supabase web dashboard](http://localhost:54363/project/default/editor))
+5. Take note of `Publishable key/anon key` when starting Supabase. Use `npx supabase status` if you didn’t get this already
+6. Copy `.env.example` to `.env` and update `SUPABASE_ANON_KEY` from step 4
+7. Reset/seed the database: `npx supabase db reset`
+8. Install NPM packages: `npm install`
 
-## Getting Started
+## Running
 
-### Installation
+Run the app with:
 
-Install the dependencies:
+    npm run dev
 
-```bash
-npm install
-```
+Go to http://localhost:5173/ and log in with:
 
-### Development
+- Email: `dev@blendalabs.com`
+- Password: `video`
 
-Start the development server with HMR:
+## Development workflow
 
-```bash
-npm run dev
-```
+We normally use [Linear](https://linear.app/) for issue tracking and creating branch names, but ignore this for now.
 
-Your application will be available at `http://localhost:5173`.
+1. Create new branch for the new feature/fix: `[username]/[description-of-feature]` (PR title: “Description of feature”).
+2. Write your amazing code.
+3. Apply code linting/prettifier – `npm run fix` (or `npm run precommit` if you modified the database) – before committing code and correct any issues.
+4. Create a new [pull request (PR)](https://github.com/Climate-Action-Agency/test-React Router v7 Framework-supabase/pulls) on GitHub.
+5. Tech Lead will review your pull request.
 
-## Building for Production
+P.S. It’s ok to merge `main` branch into your own feature branch to solve conflicts.
 
-Create a production build:
+### Creating migrations for database changes
 
-```bash
-npm run build
-```
+- (preferred) Create empty, time-stamped migration file with: `npx supabase migration new [migration-name]`
+- (less surgical) Auto-create migration file based on database changes: `npx supabase db diff -s public -f [migration-name]`
+- Reset local database, test migrations and seeding (`npx supabase db reset`)
 
-## Deployment
+### Code style guide
 
-### Docker Deployment
+- Aim for 1) readability, then 2) minimalism/DRY:ness: _“Code is read more than it is written”_.
+- Create functions that take an _object as argument_ instead of multiple arguments where possible. Prefer `function foo({ arg1, arg2 })` over `function foo(arg1, arg2)`.
+- Use `React.FC` for components.
+- Use a TypeScript `interface` called `...Props` for complex function arguments, e.g: `const CategoryCard: React.FC<CategoryCardProps>`
+- Event handlers starts with `handle`, props with `on`: `onPress={handlePressButton}`.
+- Organise your `import`s in groups: external imports, business logic, components, assets.
+- Define global TypeScript types including “shortcuts” to Supabase types in `global.d.ts`.
 
-To build and run using Docker:
+### How to build a typical CRUD view in React Router v7 Framework
 
-```bash
-docker build -t my-app .
+- Make a Supabase/Postgres SQL view with all columns you need, e.g. `view_products`
+- Create a file for your page/route (e.g. `app/routes/my-page.tsx`) with this structure:
+  1.  Load data: `loader` (React Router v7 Framework)
+  2.  Render: `export default function MyPageName` (React component). You can use `DataTable` to render the list view.
+  3.  Form interactions: `action` (React Router v7 Framework)
 
-# Run the container
-docker run -p 3000:3000 my-app
-```
+## Test tasks
 
-The containerized application can be deployed to any platform that supports Docker, including:
+### Test task 1: 
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
 
-### DIY Deployment
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+Submit your code as a [PR](#development-workflow). Good luck!
