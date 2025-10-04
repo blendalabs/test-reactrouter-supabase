@@ -16,7 +16,7 @@
 3. [Start Docker](https://www.docker.com/) (used for Supabase)
 4. Start Supabase: `npx supabase start` (tip: you can run the [Supabase web dashboard](http://localhost:54363/project/default/editor))
 5. Take note of `Publishable key/anon key` when starting Supabase. Use `npx supabase status` if you didn’t get this already
-6. Copy `.env.example` to `.env` and update `VITE_SUPABASE_ANON_KEY` from step 4
+6. Copy `.env.example` to `.env` and update `VITE_SUPABASE_PUBLISHABLE_KEY` from step 4
 7. Reset/seed the database: `npx supabase db reset`
 8. Install NPM packages: `npm install`
 

@@ -16,7 +16,7 @@ export const createSupabaseServerClient = (
     process.env.VITE_SUPABASE_URL!,
     useServiceRoleKey
       ? process.env.VITE_SUPABASE_SERVICE_ROLE_KEY!
-      : process.env.VITE_SUPABASE_ANON_KEY!,
+      : process.env.VITE_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         getAll() {

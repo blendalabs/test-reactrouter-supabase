@@ -15,11 +15,11 @@ export const createSupabaseServerClient = (
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseKey = useServiceRoleKey
     ? process.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-    : process.env.VITE_SUPABASE_ANON_KEY;
+    : process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error(
-      'Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+      'Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.'
     );
   }
 
