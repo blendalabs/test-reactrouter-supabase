@@ -34,3 +34,15 @@ INSERT INTO public.template_locales
   (id, template_id, locale, last_render_url, thumbnail_url, created_at, updated_at)
 VALUES 
   ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'en', NULL, '/product-launch-thumbnail.png', NOW(), NOW());
+
+-- Brands
+INSERT INTO public.brands (id, slug, name)
+values
+  (uuid_generate_v4(), 'vio-ljusfabrik', 'Vio Ljusfabrik'),
+  (uuid_generate_v4(), 'blendalabs', 'Blenda Labs')
+on conflict (slug) do nothing;
+
+-- Fallback: all unassigned templates go to Default brand
+UPDATE public.templates
+set brand_id = (select id from public.brands where slug = 'vio-ljusfabrik')
+where brand_id is null;

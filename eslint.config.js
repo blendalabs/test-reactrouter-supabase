@@ -52,6 +52,8 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        URLSearchParams: 'readonly',
+        HTMLSelectElement: 'readonly',
       },
     },
     plugins: {
