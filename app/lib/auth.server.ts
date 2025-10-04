@@ -84,8 +84,10 @@ export async function ensureUserProfile(
       .insert({
         id: user.id,
         email: user.email || '',
-        full_name: user.user_metadata?.full_name || '',
-        avatar_url: user.user_metadata?.avatar_url || '',
+        // Typescript error
+        // full_name and avatar_url have unknown types, so we need to cast them to strings
+        full_name: (user.user_metadata?.full_name as string) || '',
+        avatar_url: (user.user_metadata?.avatar_url as string) || '',
       });
 
     if (profileError) {

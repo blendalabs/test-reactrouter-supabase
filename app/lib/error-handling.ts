@@ -52,14 +52,18 @@ export function showInfoToast(message: string, title?: string) {
 /**
  * Handles errors from actions/loaders and shows appropriate toasts
  */
-export function handleActionError(error: unknown): ErrorResponse {
+export async function handleActionError(
+  error: unknown
+): Promise<ErrorResponse> {
   // Log action error
   let message = 'An unexpected error occurred';
   let status = 500;
 
   if (error instanceof Response) {
     try {
-      const errorData = JSON.parse(error.body as string);
+      // error.body is a ReadableStream, and can't be converted to a string, so we need to use .json() to read it asynchronously
+      // const errorData = JSON.parse(error.body as string);
+      const errorData = await error.json();
       message = errorData.error || error.statusText || message;
       status = error.status;
     } catch {
@@ -77,7 +81,7 @@ export function handleActionError(error: unknown): ErrorResponse {
     showErrorToast(message);
   }
 
-  return { error: message, status };
+  return Promise.resolve({ error: message, status });
 }
 
 /**

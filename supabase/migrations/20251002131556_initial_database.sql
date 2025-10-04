@@ -35,12 +35,23 @@ create table public.team_members (
   unique(team_id, user_id)
 );
 
+-- Brands Table
+create table public.brands (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  slug text not null unique,
+  description text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Templates Table
 create table public.templates (
   id uuid primary key default uuid_generate_v4(),
   title text not null,
   description text,
   team_id uuid not null references public.teams(id) on delete cascade,
+  brand_id uuid references public.brands(id) on delete set null,
   creator_user_id uuid references public.user_profiles(id) on delete set null,
   duration integer,
   thumbnail_url text,
@@ -71,8 +82,12 @@ create index teams_slug_idx on public.teams(slug);
 create index team_members_team_id_idx on public.team_members(team_id);
 create index team_members_user_id_idx on public.team_members(user_id);
 
+-- Brands indexes
+create index brands_slug_idx on public.brands(slug);
+
 -- Templates indexes
 create index templates_team_id_idx on public.templates(team_id);
+create index templates_brand_id_idx on public.templates(brand_id);
 create index templates_creator_user_id_idx on public.templates(creator_user_id);
 
 -- Template Locales indexes
@@ -86,6 +101,7 @@ create index template_locales_locale_idx on public.template_locales(locale);
 alter table public.user_profiles enable row level security;
 alter table public.teams enable row level security;
 alter table public.team_members enable row level security;
+alter table public.brands enable row level security;
 alter table public.templates enable row level security;
 alter table public.template_locales enable row level security;
 
@@ -147,6 +163,13 @@ create policy "Authenticated users can insert team members"
 -- Only authenticated users can delete team members (further restricted by app logic)
 create policy "Authenticated users can delete team members"
   on public.team_members for delete
+  to authenticated
+  using (true);
+
+-- Brands Policies
+-- All authenticated users can view brands
+create policy "Authenticated users can view brands"
+  on public.brands for select
   to authenticated
   using (true);
 
@@ -257,6 +280,11 @@ create trigger set_updated_at
 
 create trigger set_updated_at
   before update on public.teams
+  for each row
+  execute function public.handle_updated_at();
+
+create trigger set_updated_at
+  before update on public.brands
   for each row
   execute function public.handle_updated_at();
 

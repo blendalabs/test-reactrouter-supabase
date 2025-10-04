@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      brands: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          name: string;
+          slug: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       team_members: {
         Row: {
           id: string;
@@ -126,6 +153,7 @@ export type Database = {
       };
       templates: {
         Row: {
+          brand_id: string | null;
           created_at: string;
           creator_user_id: string | null;
           description: string | null;
@@ -137,6 +165,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          brand_id?: string | null;
           created_at?: string;
           creator_user_id?: string | null;
           description?: string | null;
@@ -148,6 +177,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          brand_id?: string | null;
           created_at?: string;
           creator_user_id?: string | null;
           description?: string | null;
@@ -159,6 +189,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'templates_brand_id_fkey';
+            columns: ['brand_id'];
+            isOneToOne: false;
+            referencedRelation: 'brands';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'templates_creator_user_id_fkey';
             columns: ['creator_user_id'];

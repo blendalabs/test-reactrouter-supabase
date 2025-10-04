@@ -23,11 +23,18 @@ INSERT INTO public.team_members
 VALUES
   (E'6f55fdd4-ef6e-4ff2-95f5-1db8e8cb2815', E'5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', E'813b6b64-f5f4-49ea-9719-c49db026d937', E'admin', E'2025-09-18 11:25:01.685084+00');
 
+-- Brands
+INSERT INTO public.brands
+  (id, name, slug, description, created_at, updated_at)
+VALUES
+  ('770e8400-e29b-41d4-a716-446655440001', 'Lindells Bil', 'lindells-bil', 'Lindells Bil brand', NOW(), NOW()),
+  ('770e8400-e29b-41d4-a716-446655440002', 'Vio Ljusfabrik', 'vio-ljusfabrik', 'Vio Ljusfabrik brand', NOW(), NOW());
+
 -- Templates
 INSERT INTO public.templates
-  (id, title, description, team_id, creator_user_id, thumbnail_url, duration, created_at, updated_at)
-VALUES 
-  ('550e8400-e29b-41d4-a716-446655440001', 'Video Template 1', 'Example product video', '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', '813b6b64-f5f4-49ea-9719-c49db026d937', '/video_placeholder.svg', 12110, NOW(), NOW());
+  (id, title, description, team_id, brand_id, creator_user_id, thumbnail_url, duration, created_at, updated_at)
+VALUES
+  ('550e8400-e29b-41d4-a716-446655440001', 'Video Template 1', 'Example product video', '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', '770e8400-e29b-41d4-a716-446655440001', '813b6b64-f5f4-49ea-9719-c49db026d937', '/video_placeholder.svg', 12110, NOW(), NOW());
 
 -- template locales
 INSERT INTO public.template_locales

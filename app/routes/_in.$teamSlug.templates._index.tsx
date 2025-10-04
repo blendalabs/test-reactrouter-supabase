@@ -9,11 +9,25 @@ import {
 import { appService } from '~/services/app';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
+import { BrandFilter } from '~/components/BrandFilter';
 import { Play, Globe, Clock } from 'lucide-react';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
 };
+
+function buildTemplateQueryString(includeBrandFilter: boolean): string {
+  const parts = [
+    '*',
+    `template_locales (id, locale, last_render_url, thumbnail_url, created_at, template_id, updated_at)`,
+  ];
+
+  if (includeBrandFilter) {
+    parts.push(`brands!inner(id, name, slug)`);
+  }
+
+  return parts.join(', ');
+}
 
 export async function loader({
   request,
@@ -54,34 +68,45 @@ export async function loader({
     throw new Error('Access denied: You are not a member of this team');
   }
 
-  // Build query for templates
-  const templatesQuery = supabaseClient
+  // Get brand filter from URL search params
+  const url = new URL(request.url);
+  const brandSlug = url.searchParams.get('brand');
+
+  // Fetch all brands
+  const { data: brands, error: brandsError } = await supabaseClient
+    .from('brands')
+    .select('id, name, slug')
+    .order('name', { ascending: true });
+
+  if (brandsError) {
+    throw new Error('Failed to load brands');
+  }
+
+  const queryString = buildTemplateQueryString(!!brandSlug);
+
+  let templatesQuery = supabaseClient
     .from('templates')
-    .select(
-      `
-      *,
-      template_locales (
-        id,
-        locale,
-        last_render_url,
-        thumbnail_url,
-        created_at,
-        template_id,
-        updated_at
-      )
-    `
-    )
+    .select(queryString)
     .eq('team_id', team.id);
 
-  const { data: templates, error } = await templatesQuery.order('created_at', {
-    ascending: false,
-  });
+  // Apply brand filter if specified
+  if (brandSlug) {
+    templatesQuery = templatesQuery.eq('brands.slug', brandSlug);
+  }
+
+  const { data: templates, error } = await templatesQuery
+    .order('created_at', {
+      ascending: false,
+    })
+    // to avoid type errors
+    // because of the conditional inner join with brands
+    .overrideTypes<TemplateWithLocales[]>();
 
   if (error) {
     throw new Error('Failed to load templates');
   }
 
-  return { user, team, templates: templates || [] };
+  return { user, team, templates: templates || [], brands: brands || [] };
 }
 
 // Helper function to get template status based on locales
@@ -90,12 +115,9 @@ function getTemplateStatus(
 ): 'completed' | 'in-progress' | 'draft' {
   const locales = template.template_locales || [];
   if (locales.length === 0) return 'draft';
-  if (
-    locales.some(
-      (locale: { last_render_url?: string }) => locale.last_render_url
-    )
-  )
-    return 'completed';
+  // Typescript error
+  // No need to define the type of the locale.
+  if (locales.some(locale => locale.last_render_url)) return 'completed';
   return 'in-progress';
 }
 
@@ -121,7 +143,7 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
-  const { user, team, templates } = useLoaderData<typeof loader>();
+  const { user, team, templates, brands } = useLoaderData<typeof loader>();
   const [searchQuery] = useState('');
 
   const filteredTemplates = templates.filter(template =>
@@ -155,6 +177,11 @@ export default function TemplatesPage() {
   };
   return (
     <div className="space-y-6">
+      {/* Brand Filter */}
+      <div className="flex justify-start">
+        <BrandFilter brands={brands} />
+      </div>
+
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredTemplates.map((template, index) => (
