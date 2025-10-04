@@ -4,6 +4,7 @@ type Tables = Database['public']['Tables'];
 
 export type Profile = Tables['user_profiles']['Row'];
 export type Template = Tables['templates']['Row'];
+export type Brand = Tables['brands']['Row'];
 export type TemplateLocale = Tables['template_locales']['Row'];
 export type Team = Tables['teams']['Row'];
 export type TeamMember = Tables['team_members']['Row'];
