@@ -39,8 +39,8 @@ We normally use [Linear](https://linear.app/) for issue tracking and creating br
 2. Create new branch for the new feature/fix: `[username]/[description-of-feature]` (PR title: “Description of feature”).
 3. Write your amazing code.
 4. Apply code linting/prettifier (`npm run fix`) before committing code and correct any issues.
-5. Create a new [pull request (PR)](https://github.com/blendalabs/test-reactrouter-supabase/pulls) on GitHub.
-6. Tech Lead will review your pull request.
+5. Create a new **pull request (PR)** into **your own forked, private repo** on GitHub.
+6. Invite **tomsoderlund** to your repo, who will review your pull request.
 
 P.S. It’s ok to merge `main` branch into your own feature branch to solve conflicts.
 
@@ -80,4 +80,4 @@ Notes:
 - We don’t need an UI to create new brands, but example data in database seed.
 - React Router v7 Framework contains helpers for URL parameters.
 
-Submit your code as a [PR](#development-workflow). Good luck!
+Submit your code as a [PR in a forked, private repo](#development-workflow). Good luck!
