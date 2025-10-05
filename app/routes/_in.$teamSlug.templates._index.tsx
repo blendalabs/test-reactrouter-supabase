@@ -55,6 +55,9 @@ export async function loader({
   }
 
   // Build query for templates
+  const searchParams = new URL(request.url).searchParams;
+  const selectedBrand = searchParams.get('brand');
+
   const templatesQuery = supabaseClient
     .from('templates')
     .select(
@@ -68,10 +71,21 @@ export async function loader({
         created_at,
         template_id,
         updated_at
+      ),
+      brands${selectedBrand ? '!inner' : ''} (
+        id,
+        name,
+        slug,
+        created_at,
+        updated_at
       )
     `
     )
     .eq('team_id', team.id);
+
+  if (selectedBrand) {
+    templatesQuery.eq('brands.slug', selectedBrand);
+  }
 
   const { data: templates, error } = await templatesQuery.order('created_at', {
     ascending: false,
