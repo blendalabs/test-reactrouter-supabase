@@ -34,3 +34,30 @@ INSERT INTO public.template_locales
   (id, template_id, locale, last_render_url, thumbnail_url, created_at, updated_at)
 VALUES 
   ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'en', NULL, '/product-launch-thumbnail.png', NOW(), NOW());
+
+-- Brands
+-- adding a few demo brands to filter
+insert into public.brands (name, slug) values
+  ('Vio Ljusfabrik', 'vio-ljusfabrik'),
+  ('Blenda Labs',    'blenda-labs'),
+  ('Nordic Film',    'nordic-film')
+on conflict (slug) do update
+set name = excluded.name;
+
+-- Attaching brands to existing templates
+-- with this, we can give each existing template a brand so the filter can show differences
+-- setting a known sample template to 'blenda-labs' if not already set
+update public.templates
+set brand_id = (select id from public.brands where slug = 'blenda-labs')
+where id = '550e8400-e29b-41d4-a716-446655440001'
+  and brand_id is null;
+
+-- Useful if to add more templates later, because it assigns a random brand to each template.
+-- update public.templates t
+-- set brand_id = (
+--   select id from public.brands
+--   order by random()
+--   limit 1
+-- )
+-- where t.team_id = '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704'
+--   and t.brand_id is null;
