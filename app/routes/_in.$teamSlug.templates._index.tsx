@@ -9,7 +9,8 @@ import {
 import { appService } from '~/services/app';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
-import { Play, Globe, Clock } from 'lucide-react';
+import { Play, Globe, Clock, Tag } from 'lucide-react';
+import { BrandFilter } from '~/components/BrandFilter';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
@@ -54,24 +55,40 @@ export async function loader({
     throw new Error('Access denied: You are not a member of this team');
   }
 
-  // Build query for templates
-  const templatesQuery = supabaseClient
-    .from('templates')
-    .select(
-      `
-      *,
-      template_locales (
-        id,
-        locale,
-        last_render_url,
-        thumbnail_url,
-        created_at,
-        template_id,
-        updated_at
-      )
-    `
+  const url = new URL(request.url);
+  const brandSlug = url.searchParams.get('brand');
+
+  // Build query for templates with conditional INNER JOIN when filtering by brand, LEFT JOIN otherwise
+  const baseSelect = `
+    *,
+      ${brandSlug && brandSlug !== 'unassigned' ? 'brands!inner' : 'brands'} (
+      id,
+      name,
+      slug
+    ),
+    template_locales (
+      id,
+      locale,
+      last_render_url,
+      thumbnail_url,
+      created_at,
+      template_id,
+      updated_at
     )
+  `;
+
+  let templatesQuery = supabaseClient
+    .from('templates')
+    .select(baseSelect)
     .eq('team_id', team.id);
+
+  if (brandSlug === 'unassigned') {
+    // Filter for templates with no brand
+    templatesQuery = templatesQuery.is('brand_id', null);
+  } else if (brandSlug && brandSlug.length > 0) {
+    // Filter for specific brand
+    templatesQuery = templatesQuery.eq('brands.slug', brandSlug);
+  }
 
   const { data: templates, error } = await templatesQuery.order('created_at', {
     ascending: false,
@@ -81,7 +98,18 @@ export async function loader({
     throw new Error('Failed to load templates');
   }
 
-  return { user, team, templates: templates || [] };
+  // Load brands to populate brand filter dropdown
+  const brandQuery = supabaseClient.from('brands').select('id, name, slug');
+
+  const { data: brands, error: brandError } = await brandQuery.order('name', {
+    ascending: true,
+  });
+
+  if (brandError) {
+    throw new Error('Failed to load brands');
+  }
+
+  return { user, team, templates: templates || [], brands: brands || [] };
 }
 
 // Helper function to get template status based on locales
@@ -121,7 +149,7 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
-  const { user, team, templates } = useLoaderData<typeof loader>();
+  const { user, team, templates, brands } = useLoaderData<typeof loader>();
   const [searchQuery] = useState('');
 
   const filteredTemplates = templates.filter(template =>
@@ -154,7 +182,11 @@ export default function TemplatesPage() {
     }
   };
   return (
-    <div className="space-y-6">
+    <div className="relative">
+      {/* Brand Filter Bar */}
+      <div className="sticky top-0 z-10 bg-background border-b border-border px-6 py-4 mb-6 -mx-6">
+        <BrandFilter brands={brands} />
+      </div>
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredTemplates.map((template, index) => (
@@ -193,12 +225,26 @@ export default function TemplatesPage() {
               <CardTitle className="text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-200">
                 {template.title}
               </CardTitle>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                <Clock className="h-4 w-4" />
-                <span suppressHydrationWarning>
-                  Created{' '}
-                  {new Date(template.created_at || '').toLocaleDateString()}
-                </span>
+              <div className="flex flex-col gap-3 text-sm mb-3">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span suppressHydrationWarning>
+                    Created{' '}
+                    {new Date(template.created_at || '').toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-foreground">
+                  <Tag className="h-4 w-4" />
+                  <span
+                    className={
+                      template.brands?.name
+                        ? ''
+                        : 'text-muted-foreground italic'
+                    }
+                  >
+                    {template.brands?.name || 'Unassigned'}
+                  </span>
+                </div>
                 {template.creator_user_id !== user.id && (
                   <span className="text-xs bg-muted px-2 py-1 rounded">
                     Shared
@@ -210,28 +256,28 @@ export default function TemplatesPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <Globe className="h-4 w-4" />
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {template.template_locales?.map(
-                    (
-                      locale: { id: string; locale: string },
-                      localeIndex: number
-                    ) => (
-                      <Badge
-                        key={locale.id}
-                        variant="secondary"
-                        className="text-xs transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2"
-                        style={{
-                          animationDelay: `${index * 50 + localeIndex * 25}ms`,
-                        }}
-                      >
-                        <span className="mr-1">
-                          {getSupportedLocaleFlag(locale.locale)}
-                        </span>
-                        {getSupportedLocaleName(locale.locale)}
-                      </Badge>
-                    )
-                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {template.template_locales?.map(
+                      (
+                        locale: { id: string; locale: string },
+                        localeIndex: number
+                      ) => (
+                        <Badge
+                          key={locale.id}
+                          variant="secondary"
+                          className="text-xs transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2"
+                          style={{
+                            animationDelay: `${index * 50 + localeIndex * 25}ms`,
+                          }}
+                        >
+                          <span className="mr-1">
+                            {getSupportedLocaleFlag(locale.locale)}
+                          </span>
+                          {getSupportedLocaleName(locale.locale)}
+                        </Badge>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>

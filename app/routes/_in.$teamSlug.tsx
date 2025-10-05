@@ -25,7 +25,7 @@ export default function InLayout() {
         <TopBar />
 
         {/* Dynamic Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 px-6 pb-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>
