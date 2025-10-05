@@ -9,7 +9,8 @@ import {
 import { appService } from '~/services/app';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
-import { Play, Globe, Clock } from 'lucide-react';
+import { Play, Globe, Clock, TagIcon } from 'lucide-react';
+import { SelectorSearchParams } from '~/components/SelectorSearchParams';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
@@ -54,6 +55,24 @@ export async function loader({
     throw new Error('Access denied: You are not a member of this team');
   }
 
+  // Get brands for team
+  const { data: brands, error: brandsError } = await supabaseClient
+    .from('brands')
+    .select(
+      `
+      id, 
+      name, 
+      slug,
+      created_at,
+      updated_at
+    `
+    )
+    .eq('team_id', team.id);
+
+  if (brandsError) {
+    throw new Error('Failed to get brands');
+  }
+
   // Build query for templates
   const searchParams = new URL(request.url).searchParams;
   const selectedBrand = searchParams.get('brand');
@@ -95,7 +114,7 @@ export async function loader({
     throw new Error('Failed to load templates');
   }
 
-  return { user, team, templates: templates || [] };
+  return { user, team, templates: templates || [], brands: brands || [] };
 }
 
 // Helper function to get template status based on locales
@@ -135,7 +154,7 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
-  const { user, team, templates } = useLoaderData<typeof loader>();
+  const { user, team, templates, brands } = useLoaderData<typeof loader>();
   const [searchQuery] = useState('');
 
   const filteredTemplates = templates.filter(template =>
@@ -167,8 +186,22 @@ export default function TemplatesPage() {
       navigate(`/${team.slug}/templates/${templateId}/en/edit`);
     }
   };
+
+  const selectorItems = brands.map(brand => ({
+    title: brand.name,
+    value: brand.slug,
+  }));
+
   return (
     <div className="space-y-6">
+      {/* Brand selector */}
+      <SelectorSearchParams
+        searchParamsKey="brand"
+        allItemsTitle="All brands"
+        items={selectorItems}
+        icon={<TagIcon />}
+      />
+
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredTemplates.map((template, index) => (
