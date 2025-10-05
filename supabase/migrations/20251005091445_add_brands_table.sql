@@ -22,6 +22,11 @@ using (
   )
 );
 
+create trigger set_updated_at
+before update on public.brands
+for each row
+execute function public.handle_updated_at();
+
 create table public.brand_template_relations (
   brand_id uuid not null references public.brands(id) on delete cascade,
   template_id uuid not null references public.templates(id) on delete cascade,
