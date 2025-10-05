@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router';
 import { Button } from '~/components/ui/button';
-import { Video } from 'lucide-react';
+import { Video, Tag } from 'lucide-react';
 import packageJson from '../../../package.json';
 import { useAuth } from '~/lib/auth';
 
@@ -40,6 +40,16 @@ export function Sidebar({ currentPath }: SidebarProps) {
             <Link to={`/${teamSlug}/templates`}>
               <Video className="h-4 w-4" />
               Templates
+            </Link>
+          </Button>
+          <Button
+            variant={isActive('/brand-select') ? 'default' : 'ghost'}
+            className="w-full justify-start gap-3"
+            asChild
+          >
+            <Link to={`/${teamSlug}/brand-select`}>
+              <Tag className="h-4 w-4" />
+              All Brands
             </Link>
           </Button>
         </div>

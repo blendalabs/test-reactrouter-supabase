@@ -34,3 +34,12 @@ INSERT INTO public.template_locales
   (id, template_id, locale, last_render_url, thumbnail_url, created_at, updated_at)
 VALUES 
   ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'en', NULL, '/product-launch-thumbnail.png', NOW(), NOW());
+
+-- brand categories
+INSERT INTO public.brand_categories
+  (id, brand_name, created_at, updated_at)
+VALUES 
+  (gen_random_uuid(), 'All Brands', NOW(), NOW()),
+  (gen_random_uuid(), 'Lindells Bil', NOW(), NOW()),
+  (gen_random_uuid(), 'Vio Ljusfabrik', NOW(), NOW());
+ 
