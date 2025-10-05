@@ -7,6 +7,7 @@ export type Template = Tables['templates']['Row'];
 export type TemplateLocale = Tables['template_locales']['Row'];
 export type Team = Tables['teams']['Row'];
 export type TeamMember = Tables['team_members']['Row'];
+export type Brand = Tables['brands']['Row'];
 
 export interface TemplateWithLocales extends Template {
   template_locales: TemplateLocale[];

@@ -1,5 +1,9 @@
-import { useState } from 'react';
-import { useNavigate, useLoaderData, type MetaFunction } from 'react-router';
+import {
+  useNavigate,
+  useLoaderData,
+  useSearchParams,
+  type MetaFunction,
+} from 'react-router';
 import { requireAuthWithClient, ensureUserProfile } from '../lib/auth.server';
 import type { TemplateWithLocales } from '../types/global';
 import {
@@ -10,6 +14,7 @@ import { appService } from '~/services/app';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
 import { Play, Globe, Clock } from 'lucide-react';
+import BrandSelector from '~/components/BrandSelector';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
@@ -54,12 +59,27 @@ export async function loader({
     throw new Error('Access denied: You are not a member of this team');
   }
 
+  // Parse brand filter from URL
+  const url = new URL(request.url);
+  const brandSlug = url.searchParams.get('brand');
+
+  // Fetch all brands for the selector
+  const { data: brands, error: brandsError } = await supabaseClient
+    .from('brands')
+    .select('*')
+    .order('name');
+
+  if (brandsError) {
+    throw new Error('Unable to load brand options. Please try again.');
+  }
+
   // Build query for templates
-  const templatesQuery = supabaseClient
+  let templatesQuery = supabaseClient
     .from('templates')
     .select(
       `
       *,
+      brand:brands(*),
       template_locales (
         id,
         locale,
@@ -73,6 +93,25 @@ export async function loader({
     )
     .eq('team_id', team.id);
 
+  // Apply brand filter if specified
+  if (brandSlug) {
+    // First get the brand_id for the given slug
+    const { data: brand, error: brandError } = await supabaseClient
+      .from('brands')
+      .select('id')
+      .eq('slug', brandSlug)
+      .single();
+
+    if (brandError || !brand) {
+      throw new Error(
+        'Invalid brand filter in URL. Please check the URL or refresh the page.'
+      );
+    }
+
+    // Filter templates by brand_id
+    templatesQuery = templatesQuery.eq('brand_id', brand.id);
+  }
+
   const { data: templates, error } = await templatesQuery.order('created_at', {
     ascending: false,
   });
@@ -81,7 +120,13 @@ export async function loader({
     throw new Error('Failed to load templates');
   }
 
-  return { user, team, templates: templates || [] };
+  return {
+    user,
+    team,
+    templates: templates || [],
+    brands: brands || [],
+    selectedBrand: brandSlug,
+  };
 }
 
 // Helper function to get template status based on locales
@@ -90,12 +135,7 @@ function getTemplateStatus(
 ): 'completed' | 'in-progress' | 'draft' {
   const locales = template.template_locales || [];
   if (locales.length === 0) return 'draft';
-  if (
-    locales.some(
-      (locale: { last_render_url?: string }) => locale.last_render_url
-    )
-  )
-    return 'completed';
+  if (locales.some(locale => locale.last_render_url)) return 'completed';
   return 'in-progress';
 }
 
@@ -121,12 +161,17 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
-  const { user, team, templates } = useLoaderData<typeof loader>();
-  const [searchQuery] = useState('');
+  const [, setSearchParams] = useSearchParams();
+  const { user, team, templates, brands, selectedBrand } =
+    useLoaderData<typeof loader>();
 
-  const filteredTemplates = templates.filter(template =>
-    template.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleBrandChange = (brandSlug: string | null) => {
+    if (brandSlug) {
+      setSearchParams({ brand: brandSlug });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   const getStatusColor = (status: 'completed' | 'in-progress' | 'draft') => {
     switch (status) {
@@ -155,9 +200,19 @@ export default function TemplatesPage() {
   };
   return (
     <div className="space-y-6">
+      {/* Brand Selector */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Video Templates</h1>
+        <BrandSelector
+          brands={brands}
+          selectedBrand={selectedBrand}
+          onBrandChange={handleBrandChange}
+        />
+      </div>
+
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredTemplates.map((template, index) => (
+        {templates.map((template, index) => (
           <Card
             key={template.id}
             className="cursor-pointer hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 animate-in slide-in-from-bottom-4"
@@ -239,7 +294,7 @@ export default function TemplatesPage() {
         ))}
       </div>
 
-      {filteredTemplates.length === 0 && (
+      {templates.length === 0 && (
         <div className="text-center py-12 animate-in fade-in-50 slide-in-from-bottom-4">
           <div className="text-muted-foreground">
             <Globe className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
