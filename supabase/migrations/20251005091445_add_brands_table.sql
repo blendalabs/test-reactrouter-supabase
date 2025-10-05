@@ -4,7 +4,7 @@ create table public.brands (
   slug text not null,
   team_id uuid not null references public.teams(id) on delete cascade,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 create index idx_brands_slug on public.brands(slug);
