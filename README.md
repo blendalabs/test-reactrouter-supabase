@@ -76,6 +76,7 @@ We want to be able to filter Video Templates based on Brand, e.g. `?brand=vio-lj
 
 Notes:
 
+- Each Template will have 0 or 1 Brand.
 - This requires database migrations, backend code, and frontend code.
 - We don’t need an UI to create new brands, but example data in database seed.
 - React Router v7 Framework contains helpers for URL parameters.
