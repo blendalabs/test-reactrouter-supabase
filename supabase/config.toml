@@ -172,4 +172,5 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 enabled = true
 sql_paths = [
   './seed/main.sql',
+  './seed/brands.sql'
 ]

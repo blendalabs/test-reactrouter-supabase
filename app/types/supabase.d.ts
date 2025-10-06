@@ -9,6 +9,71 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      brand_template_relations: {
+        Row: {
+          brand_id: string;
+          template_id: string;
+        };
+        Insert: {
+          brand_id: string;
+          template_id: string;
+        };
+        Update: {
+          brand_id?: string;
+          template_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'brand_template_relations_brand_id_fkey';
+            columns: ['brand_id'];
+            isOneToOne: false;
+            referencedRelation: 'brands';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'brand_template_relations_template_id_fkey';
+            columns: ['template_id'];
+            isOneToOne: false;
+            referencedRelation: 'templates';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      brands: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+          team_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+          team_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+          team_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'brands_team_id_fkey';
+            columns: ['team_id'];
+            isOneToOne: false;
+            referencedRelation: 'teams';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       team_members: {
         Row: {
           id: string;
