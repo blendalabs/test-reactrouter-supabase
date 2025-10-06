@@ -23,14 +23,29 @@ INSERT INTO public.team_members
 VALUES
   (E'6f55fdd4-ef6e-4ff2-95f5-1db8e8cb2815', E'5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', E'813b6b64-f5f4-49ea-9719-c49db026d937', E'admin', E'2025-09-18 11:25:01.685084+00');
 
+  -- Brands
+  INSERT INTO public.brands
+    (id, name, slug, created_at, updated_at)
+  VALUES
+    ('880e8400-e29b-41d4-a716-446655440001', 'Nike Shoes', 'nike-shoes', NOW(), NOW()),
+    ('990e8400-e29b-41d4-a716-446655440001', 'Adidas Shoes', 'adidas-shoes', NOW(), NOW()),
+    ('aa0e8400-e29b-41d4-a716-446655440001', 'Puma Shoes', 'puma-shoes', NOW(), NOW()),
+    ('bb0e8400-e29b-41d4-a716-446655440001', 'New Balance Shoes', 'new-balance-shoes', NOW(), NOW());
+
 -- Templates
 INSERT INTO public.templates
-  (id, title, description, team_id, creator_user_id, thumbnail_url, duration, created_at, updated_at)
-VALUES 
-  ('550e8400-e29b-41d4-a716-446655440001', 'Video Template 1', 'Example product video', '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', '813b6b64-f5f4-49ea-9719-c49db026d937', '/video_placeholder.svg', 12110, NOW(), NOW());
+  (id, title, description, team_id, creator_user_id, thumbnail_url, duration, brand_id, created_at, updated_at)
+VALUES
+  ('550e8400-e29b-41d4-a716-446655440001', 'Video Template 1', 'Example product video', '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', '813b6b64-f5f4-49ea-9719-c49db026d937', '/video_placeholder.svg', 12110,'880e8400-e29b-41d4-a716-446655440001',  NOW(), NOW()),
+  ('660e8400-e29b-41d4-a716-446655440002', 'Video Template 2', 'Example product video', '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', '813b6b64-f5f4-49ea-9719-c49db026d937', '/video_placeholder.svg', 12110,'880e8400-e29b-41d4-a716-446655440001',  NOW(), NOW()),
+  ('770e8400-e29b-41d4-a716-446655440003', 'Video Template 3', 'Example product video', '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', '813b6b64-f5f4-49ea-9719-c49db026d937', '/video_placeholder.svg', 12110,'bb0e8400-e29b-41d4-a716-446655440001',  NOW(), NOW()),
+  ('880e8400-e29b-41d4-a716-446655440004', 'Video Template 4', 'Example product video', '5e44edd3-df5d-4ff1-84f4-0ca7d7ba1704', '813b6b64-f5f4-49ea-9719-c49db026d937', '/video_placeholder.svg', 12110, NULL, NOW(), NOW());
 
 -- template locales
 INSERT INTO public.template_locales
   (id, template_id, locale, last_render_url, thumbnail_url, created_at, updated_at)
-VALUES 
-  ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'en', NULL, '/product-launch-thumbnail.png', NOW(), NOW());
+VALUES
+  ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'en', NULL, '/product-launch-thumbnail.png', NOW(), NOW()),
+  ('660e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440002', 'se', NULL, '/product-launch-thumbnail.png', NOW(), NOW()),
+  ('660e8400-e29b-41d4-a716-446655440003', '770e8400-e29b-41d4-a716-446655440003', 'fi', NULL, '/product-launch-thumbnail.png', NOW(), NOW()),
+  ('660e8400-e29b-41d4-a716-446655440004', '880e8400-e29b-41d4-a716-446655440004', 'fr', NULL, '/product-launch-thumbnail.png', NOW(), NOW());
