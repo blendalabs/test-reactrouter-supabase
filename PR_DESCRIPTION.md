@@ -185,6 +185,13 @@ export type Brand = Tables['brands']['Row'];
 - Migrations and seed apply cleanly
 - `npm run fix` and `npm run typecheck` pass
 
+Additional Testing Performed
+
+- Tested with URL manipulation (invalid slugs handled gracefully)
+- Verified browser back/forward buttons work correctly
+- Confirmed filter state persists on page refresh
+- Tested with empty brand list (selector hides appropriately)
+
 ## How the URL flow works
 
 1. User picks a brand in the dropdown
