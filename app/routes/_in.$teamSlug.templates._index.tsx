@@ -1,15 +1,16 @@
+import { Clock, Globe, Play } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, useLoaderData, type MetaFunction } from 'react-router';
-import { requireAuthWithClient, ensureUserProfile } from '../lib/auth.server';
-import type { TemplateWithLocales } from '../types/global';
+import { useLoaderData, useNavigate, type MetaFunction } from 'react-router';
+import BrandSelect from '~/components/templates/BrandSelect';
+import { Badge } from '~/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { appService } from '~/services/app';
+import { ensureUserProfile, requireAuthWithClient } from '../lib/auth.server';
 import {
   getSupportedLocaleFlag,
   getSupportedLocaleName,
 } from '../services/locales';
-import { appService } from '~/services/app';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
-import { Badge } from '~/components/ui/badge';
-import { Play, Globe, Clock } from 'lucide-react';
+import type { TemplateWithLocales } from '../types/global';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
@@ -24,14 +25,16 @@ export async function loader({
 }) {
   const { user, supabaseClient } = await requireAuthWithClient(request);
 
-  // Ensure user has a profile
+  // Ensure user has a profile and do nor block the page if it fails
   try {
     await ensureUserProfile(user, request);
-  } catch {
-    // Continue anyway, the profile creation might have failed but we can still show templates
+  } catch (err) {
+    // non-blocking: profile creation can fail (rls/network).
+    // Silently ignore the error - profile creation is not critical
+    void err;
   }
 
-  // Get team by slug
+  // Team by slug to id
   const { data: team, error: teamError } = await supabaseClient
     .from('teams')
     .select('id, name, slug')
@@ -42,7 +45,7 @@ export async function loader({
     throw new Error('Team not found');
   }
 
-  // Verify user is a member of this team
+  // Verifying user is a member of this team
   const { data: teamMember, error: memberError } = await supabaseClient
     .from('team_members')
     .select('role')
@@ -54,7 +57,38 @@ export async function loader({
     throw new Error('Access denied: You are not a member of this team');
   }
 
-  // Build query for templates
+  // Extract brand filter from URL query parameter (?brand=<slug>)
+  // This allows shareable/bookmarkable filtered URLs
+  const url = new URL(request.url);
+  const activeBrandSlug =
+    url.searchParams.get('brand')?.trim().toLowerCase() || null;
+
+  // Convert brand slug to brand ID for database filtering
+  // Using slug in URLs for readability, but need ID for FK relationships
+  let brandId: string | null = null;
+  if (activeBrandSlug) {
+    const { data: brandRow } = await supabaseClient
+      .from('brands')
+      .select('id, slug')
+      .eq('slug', activeBrandSlug)
+      .single();
+    brandId = brandRow?.id ?? null;
+  }
+
+  // fetching all brands
+  const { data: brandsData, error: brandsErr } = await supabaseClient
+    .from('brands')
+    .select('slug, name')
+    .order('name', { ascending: true });
+
+  if (brandsErr) {
+    throw new Error('Failed to load brands');
+  }
+
+  const brands = (brandsData ?? []).map(b => ({ slug: b.slug, name: b.name }));
+
+  // Fetching templates for this team, with optional brand filtering
+  // Always scope to team_id for security, then optionally filter by brand
   const templatesQuery = supabaseClient
     .from('templates')
     .select(
@@ -73,6 +107,11 @@ export async function loader({
     )
     .eq('team_id', team.id);
 
+  // Applying brand filter only if a valid brand was selected
+  if (brandId) {
+    templatesQuery.eq('brand_id', brandId);
+  }
+
   const { data: templates, error } = await templatesQuery.order('created_at', {
     ascending: false,
   });
@@ -81,7 +120,13 @@ export async function loader({
     throw new Error('Failed to load templates');
   }
 
-  return { user, team, templates: templates || [] };
+  return {
+    user,
+    team,
+    templates: templates ?? [],
+    brands,
+    activeBrand: activeBrandSlug,
+  };
 }
 
 // Helper function to get template status based on locales
@@ -92,7 +137,7 @@ function getTemplateStatus(
   if (locales.length === 0) return 'draft';
   if (
     locales.some(
-      (locale: { last_render_url?: string }) => locale.last_render_url
+      (locale: { last_render_url: string | null }) => locale.last_render_url
     )
   )
     return 'completed';
@@ -121,7 +166,8 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
-  const { user, team, templates } = useLoaderData<typeof loader>();
+  const { user, team, templates, brands, activeBrand } =
+    useLoaderData<typeof loader>();
   const [searchQuery] = useState('');
 
   const filteredTemplates = templates.filter(template =>
@@ -155,6 +201,23 @@ export default function TemplatesPage() {
   };
   return (
     <div className="space-y-6">
+      {/* Top bar: title amd brand filter */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold">Templates</h1>
+          {activeBrand && (
+            <Badge variant="secondary" className="text-sm">
+              {filteredTemplates.length}{' '}
+              {filteredTemplates.length === 1 ? 'template' : 'templates'}
+            </Badge>
+          )}
+        </div>
+        <BrandSelect
+          brands={brands}
+          activeBrand={activeBrand}
+          label="Filter by brand"
+        />
+      </div>
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredTemplates.map((template, index) => (
