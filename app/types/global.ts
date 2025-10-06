@@ -21,3 +21,5 @@ export interface TemplateWithTeam extends Template {
 }
 
 export type TeamRole = TeamMember['role'];
+
+export type Brand = Tables['brands']['Row'];

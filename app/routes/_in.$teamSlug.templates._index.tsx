@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, useLoaderData, type MetaFunction } from 'react-router';
+import {
+  useNavigate,
+  useLoaderData,
+  useSearchParams,
+  type MetaFunction,
+} from 'react-router';
 import { requireAuthWithClient, ensureUserProfile } from '../lib/auth.server';
 import type { TemplateWithLocales } from '../types/global';
 import {
@@ -10,9 +15,24 @@ import { appService } from '~/services/app';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
 import { Play, Globe, Clock } from 'lucide-react';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '~/components/ui/select';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
+};
+
+type LoaderData = {
+  user: { id: string };
+  team: { id: string; name: string; slug: string };
+  templates: TemplateWithLocales[];
+  brands: { slug: string; name: string }[];
+  selectedBrand: string | null;
 };
 
 export async function loader({
@@ -54,8 +74,44 @@ export async function loader({
     throw new Error('Access denied: You are not a member of this team');
   }
 
+  // Parse brand slug from URL
+  const url = new URL(request.url);
+  const brandSlug = url.searchParams.get('brand');
+
+  // Fetch all brands for UI selector
+  const { data: brands, error: brandsError } = await supabaseClient
+    .from('brands')
+    .select('slug, name')
+    .order('name', { ascending: true });
+
+  if (brandsError) {
+    throw new Error('Failed to load brands');
+  }
+
+  // If brandSlug is provided, fetch the corresponding brand to filter templates
+  let brandId: string | null = null;
+  if (brandSlug) {
+    const { data: brand, error: brandErr } = await supabaseClient
+      .from('brands')
+      .select('id')
+      .eq('slug', brandSlug)
+      .single();
+
+    if (brandErr || !brand) {
+      // If brand not found, return empty templates list but still provide brands for selection
+      return {
+        user,
+        team,
+        templates: [],
+        brands: brands ?? [],
+        selectedBrand: brandSlug,
+      } satisfies LoaderData;
+    }
+    brandId = brand.id;
+  }
+
   // Build query for templates
-  const templatesQuery = supabaseClient
+  let query = supabaseClient
     .from('templates')
     .select(
       `
@@ -73,7 +129,12 @@ export async function loader({
     )
     .eq('team_id', team.id);
 
-  const { data: templates, error } = await templatesQuery.order('created_at', {
+  // If brandId is set, filter templates by brand_id
+  if (brandId) {
+    query = query.eq('brand_id', brandId);
+  }
+
+  const { data: templates, error } = await query.order('created_at', {
     ascending: false,
   });
 
@@ -81,7 +142,13 @@ export async function loader({
     throw new Error('Failed to load templates');
   }
 
-  return { user, team, templates: templates || [] };
+  return {
+    user,
+    team,
+    templates: templates ?? [],
+    brands: brands ?? [],
+    selectedBrand: brandSlug,
+  } satisfies LoaderData;
 }
 
 // Helper function to get template status based on locales
@@ -121,8 +188,23 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
-  const { user, team, templates } = useLoaderData<typeof loader>();
+  const { user, team, templates, brands, selectedBrand } = useLoaderData<
+    typeof loader
+  >() as LoaderData;
+  const [searchParams] = useSearchParams();
   const [searchQuery] = useState('');
+
+  // Handle URL update (?brand=slug)
+  const handleBrandChange = (value: string) => {
+    const param = new URLSearchParams(searchParams);
+    if (value === 'all') {
+      param.delete('brand');
+    } else {
+      param.set('brand', value);
+    }
+    const nextSearch = param.toString();
+    navigate({ search: nextSearch ? `?${nextSearch}` : '' });
+  };
 
   const filteredTemplates = templates.filter(template =>
     template.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -155,6 +237,30 @@ export default function TemplatesPage() {
   };
   return (
     <div className="space-y-6">
+      {/* Brand Selector */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Templates</h1>
+
+        <div>
+          <Select
+            value={selectedBrand ?? 'all'}
+            onValueChange={handleBrandChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by brand" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All brands</SelectItem>
+              {brands.map(b => (
+                <SelectItem key={b.slug} value={b.slug}>
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredTemplates.map((template, index) => (
