@@ -34,3 +34,20 @@ INSERT INTO public.template_locales
   (id, template_id, locale, last_render_url, thumbnail_url, created_at, updated_at)
 VALUES 
   ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'en', NULL, '/product-launch-thumbnail.png', NOW(), NOW());
+
+-- =============================================
+-- Seed data for brands
+-- =============================================
+
+-- Brands
+INSERT INTO public.brands (name, slug, created_at, updated_at)
+VALUES
+  ('Vio Ljusfabrik', 'vio-ljusfabrik', NOW(), NOW()),
+  ('Acme', 'acme', NOW(), NOW())
+ON CONFLICT (slug) DO NOTHING;
+
+-- Link an existing template to a brand
+UPDATE public.templates
+SET brand_id = (SELECT id FROM public.brands WHERE slug = 'vio-ljusfabrik')
+WHERE id = '550e8400-e29b-41d4-a716-446655440001';
+

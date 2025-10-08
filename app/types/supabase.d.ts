@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      brands: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       team_members: {
         Row: {
           id: string;
@@ -126,6 +150,7 @@ export type Database = {
       };
       templates: {
         Row: {
+          brand_id: string | null;
           created_at: string;
           creator_user_id: string | null;
           description: string | null;
@@ -137,6 +162,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          brand_id?: string | null;
           created_at?: string;
           creator_user_id?: string | null;
           description?: string | null;
@@ -148,6 +174,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          brand_id?: string | null;
           created_at?: string;
           creator_user_id?: string | null;
           description?: string | null;
@@ -159,6 +186,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'templates_brand_id_fkey';
+            columns: ['brand_id'];
+            isOneToOne: false;
+            referencedRelation: 'brands';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'templates_creator_user_id_fkey';
             columns: ['creator_user_id'];
@@ -201,7 +235,45 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      view_templates_with_brands: {
+        Row: {
+          brand_id: string | null;
+          brand_name: string | null;
+          brand_slug: string | null;
+          created_at: string;
+          creator_user_id: string | null;
+          description: string | null;
+          duration: number | null;
+          id: string;
+          team_id: string;
+          thumbnail_url: string | null;
+          title: string;
+          updated_at: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'templates_brand_id_fkey';
+            columns: ['brand_id'];
+            isOneToOne: false;
+            referencedRelation: 'brands';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'templates_creator_user_id_fkey';
+            columns: ['creator_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'user_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'templates_team_id_fkey';
+            columns: ['team_id'];
+            isOneToOne: false;
+            referencedRelation: 'teams';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Functions: {
       [_ in never]: never;

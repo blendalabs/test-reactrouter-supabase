@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { useNavigate, useLoaderData, type MetaFunction } from 'react-router';
 import { requireAuthWithClient, ensureUserProfile } from '../lib/auth.server';
-import type { TemplateWithLocales } from '../types/global';
+import type { TemplateWithLocalesAndBrands } from '../types/global';
 import {
   getSupportedLocaleFlag,
   getSupportedLocaleName,
@@ -10,6 +9,7 @@ import { appService } from '~/services/app';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Badge } from '~/components/ui/badge';
 import { Play, Globe, Clock } from 'lucide-react';
+import BrandSelector from '~/components/BrandSelector';
 
 export const meta: MetaFunction = () => {
   return [{ title: `Video Templates - ${appService.strings.app.title}` }];
@@ -23,6 +23,8 @@ export async function loader({
   params: { teamSlug: string };
 }) {
   const { user, supabaseClient } = await requireAuthWithClient(request);
+  const url = new URL(request.url);
+  const brandSlug = url.searchParams.get('brand');
 
   // Ensure user has a profile
   try {
@@ -54,24 +56,26 @@ export async function loader({
     throw new Error('Access denied: You are not a member of this team');
   }
 
-  // Build query for templates
+  // Get all brands for the filter dropdown
+  const { data: brands, error: brandsError } = await supabaseClient
+    .from('brands')
+    .select('*')
+    .order('name');
+
+  if (brandsError) {
+    throw new Error('Failed to load brands');
+  }
+
+  // Build query for templates using the view
   const templatesQuery = supabaseClient
-    .from('templates')
-    .select(
-      `
-      *,
-      template_locales (
-        id,
-        locale,
-        last_render_url,
-        thumbnail_url,
-        created_at,
-        template_id,
-        updated_at
-      )
-    `
-    )
+    .from('view_templates_with_brands')
+    .select('*')
     .eq('team_id', team.id);
+
+  // Apply brand filter if specified
+  if (brandSlug) {
+    templatesQuery.eq('brand_slug', brandSlug);
+  }
 
   const { data: templates, error } = await templatesQuery.order('created_at', {
     ascending: false,
@@ -81,25 +85,51 @@ export async function loader({
     throw new Error('Failed to load templates');
   }
 
-  return { user, team, templates: templates || [] };
+  // Get template locales separately
+  const templateIds = templates?.map(t => t.id) || [];
+  const { data: templateLocales, error: localesError } = await supabaseClient
+    .from('template_locales')
+    .select('*')
+    .in('template_id', templateIds);
+
+  if (localesError) {
+    throw new Error('Failed to load template locales');
+  }
+
+  // Combine templates with their locales
+  const templatesWithLocales =
+    templates?.map(template => ({
+      ...template,
+      template_locales:
+        templateLocales?.filter(locale => locale.template_id === template.id) ||
+        [],
+    })) || [];
+
+  return {
+    user,
+    team,
+    templates: templatesWithLocales,
+    brands: brands || [],
+    selectedBrandSlug: brandSlug,
+  };
 }
 
 // Helper function to get template status based on locales
 function getTemplateStatus(
-  template: TemplateWithLocales
+  template: TemplateWithLocalesAndBrands
 ): 'completed' | 'in-progress' | 'draft' {
   const locales = template.template_locales || [];
   if (locales.length === 0) return 'draft';
   if (
     locales.some(
-      (locale: { last_render_url?: string }) => locale.last_render_url
+      (locale: { last_render_url?: string | null }) => locale.last_render_url
     )
   )
     return 'completed';
   return 'in-progress';
 }
 
-function formatTemplateDuration(template: TemplateWithLocales) {
+function formatTemplateDuration(template: TemplateWithLocalesAndBrands) {
   if (!template.duration || template.duration === 0) return '--:--';
   const totalSeconds = Math.floor(template.duration / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -121,25 +151,8 @@ function formatTemplateDuration(template: TemplateWithLocales) {
 
 export default function TemplatesPage() {
   const navigate = useNavigate();
-  const { user, team, templates } = useLoaderData<typeof loader>();
-  const [searchQuery] = useState('');
-
-  const filteredTemplates = templates.filter(template =>
-    template.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const getStatusColor = (status: 'completed' | 'in-progress' | 'draft') => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'in-progress':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  const { user, team, templates, brands, selectedBrandSlug } =
+    useLoaderData<typeof loader>();
 
   const handleTemplateClick = (templateId: string) => {
     // Navigate to the first locale's edit page
@@ -155,9 +168,12 @@ export default function TemplatesPage() {
   };
   return (
     <div className="space-y-6">
+      {/* Brand Filter */}
+      <BrandSelector brands={brands} selectedBrandSlug={selectedBrandSlug} />
+
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredTemplates.map((template, index) => (
+        {templates.map((template, index) => (
           <Card
             key={template.id}
             className="cursor-pointer hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 animate-in slide-in-from-bottom-4"
@@ -182,8 +198,14 @@ export default function TemplatesPage() {
                   {formatTemplateDuration(template)}
                 </div>
                 <Badge
-                  className={`absolute top-2 left-2 ${getStatusColor(getTemplateStatus(template))} backdrop-blur-sm`}
-                  variant="outline"
+                  variant={
+                    getTemplateStatus(template) === 'completed'
+                      ? 'default'
+                      : getTemplateStatus(template) === 'in-progress'
+                        ? 'secondary'
+                        : 'outline'
+                  }
+                  className="absolute top-2 left-2 backdrop-blur-sm"
                 >
                   {getTemplateStatus(template).replace('-', ' ')}
                 </Badge>
@@ -193,6 +215,16 @@ export default function TemplatesPage() {
               <CardTitle className="text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors duration-200">
                 {template.title}
               </CardTitle>
+
+              {/* Brand Badge */}
+              {template.brand_name && (
+                <div className="mb-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {template.brand_name}
+                  </Badge>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <Clock className="h-4 w-4" />
                 <span suppressHydrationWarning>
@@ -239,7 +271,7 @@ export default function TemplatesPage() {
         ))}
       </div>
 
-      {filteredTemplates.length === 0 && (
+      {templates.length === 0 && (
         <div className="text-center py-12 animate-in fade-in-50 slide-in-from-bottom-4">
           <div className="text-muted-foreground">
             <Globe className="h-12 w-12 mx-auto mb-4 opacity-50 animate-pulse" />
